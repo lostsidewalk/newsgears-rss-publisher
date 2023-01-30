@@ -24,7 +24,6 @@ import java.util.*;
 import static java.time.Instant.now;
 import static org.apache.commons.collections4.CollectionUtils.size;
 import static org.apache.commons.lang3.StringUtils.EMPTY;
-import static org.apache.commons.lang3.StringUtils.defaultIfBlank;
 
 @Slf4j
 @Component
@@ -49,7 +48,6 @@ public class RSSPublisher implements Publisher {
 
     @Override
     public PubResult publishFeed(FeedDefinition feedDefinition, List<StagingPost> stagingPosts, Date pubDate) {
-
         List<Throwable> errors = new ArrayList<>();
         String feedIdent = feedDefinition.getIdent();
         String transportIdent = feedDefinition.getTransportIdent();
@@ -59,12 +57,12 @@ public class RSSPublisher implements Publisher {
         try {
             // build/publish the RSS feed
             Channel channel = this.rssChannelBuilder.buildChannel(feedDefinition, stagingPosts, pubDate);
-
             log.info("Published RSS feed for feedIdent={}, transportIdent={}", feedIdent, transportIdent);
             renderedFeedDao.putRSSFeedAtTransportIdent(transportIdent, RenderedRSSFeed.from(transportIdent, channel));
         } catch (Exception e) {
             errors.add(e);
         }
+
         try {
             // build/publish the ATOM feed
             Feed feed = this.atomFeedBuilder.buildFeed(feedDefinition, stagingPosts, pubDate);
@@ -75,7 +73,7 @@ public class RSSPublisher implements Publisher {
             errors.add(e);
         }
 
-        return PubResult.from(getPublisherId(), feedIdent, transportIdent, errors, pubDate);
+        return PubResult.from(getPublisherId(), errors, pubDate);
     }
 
     @Override
@@ -92,12 +90,12 @@ public class RSSPublisher implements Publisher {
     public List<FeedPreview> doPreview(String username, List<StagingPost> incomingPosts, PubFormat format) throws Exception {
         log.info("RSS publisher has to {} posts to preview at {}", size(incomingPosts), now());
         // group posts by output file for tag
-        Map<String, List<StagingPost>> postsByFeedIdent = new HashMap<>();
+        Map<Long, List<StagingPost>> postsByFeedId = new HashMap<>();
         for (StagingPost incomingPost : incomingPosts) {
-            postsByFeedIdent.computeIfAbsent(incomingPost.getFeedIdent(), t -> new ArrayList<>()).add(incomingPost);
+            postsByFeedId.computeIfAbsent(incomingPost.getFeedId(), t -> new ArrayList<>()).add(incomingPost);
         }
-        List<FeedPreview> feedPreviews = new ArrayList<>(postsByFeedIdent.keySet().size());
-        for (Map.Entry<String, List<StagingPost>> e : postsByFeedIdent.entrySet()) {
+        List<FeedPreview> feedPreviews = new ArrayList<>(postsByFeedId.keySet().size());
+        for (Map.Entry<Long, List<StagingPost>> e : postsByFeedId.entrySet()) {
             FeedPreview feedPreview = previewFeed(username, e.getKey(), e.getValue(), format);
             if (feedPreview != null) {
                 feedPreviews.add(feedPreview);
@@ -107,17 +105,17 @@ public class RSSPublisher implements Publisher {
         return feedPreviews;
     }
 
-    FeedPreview previewFeed(String username, String feedIdent, List<StagingPost> stagingPosts, PubFormat format) throws DataAccessException {
-        log.info("Previewing feed with ident={}, format={}", defaultIfBlank(feedIdent, "(all)"), format);
+    FeedPreview previewFeed(String username, Long feedId, List<StagingPost> stagingPosts, PubFormat format) throws DataAccessException {
+        log.info("Previewing feed with id={}, format={}", (feedId == null ? "(all)" : feedId), format);
         String previewArtifact = EMPTY;
-        FeedDefinition feedDefinition = this.feedDefinitionDao.findByFeedIdent(username, feedIdent);
+        FeedDefinition feedDefinition = this.feedDefinitionDao.findByFeedId(username, feedId);
         if (feedDefinition != null) {
             String transportIdent = feedDefinition.getTransportIdent();
             try {
                 if (format == PubFormat.RSS) {
                     // preview the RSS feed
                     Channel channel = this.rssChannelBuilder.buildChannel(feedDefinition, stagingPosts, new Date());
-                    log.info("Rendered RSS feed for feedIdent={}, transportIdent={}", feedIdent, transportIdent);
+                    log.info("Rendered RSS feed for feedId={}, transportIdent={}", feedId, transportIdent);
                     WireFeedOutput wireFeedOutput = new WireFeedOutput();
                     StringWriter channelWriter = new StringWriter();
                     wireFeedOutput.output(channel, channelWriter);
@@ -125,7 +123,7 @@ public class RSSPublisher implements Publisher {
                 } else if (format == PubFormat.ATOM) {
                     // preview the ATOM feed
                     Feed feed = this.atomFeedBuilder.buildFeed(feedDefinition, stagingPosts, new Date());
-                    log.info("Published ATOM feed for feedIdent={}, transportIdent={}", feedIdent, transportIdent);
+                    log.info("Published ATOM feed for feedId={}, transportIdent={}", feedId, transportIdent);
                     WireFeedOutput wireFeedOutput = new WireFeedOutput();
                     StringWriter feedWriter = new StringWriter();
                     wireFeedOutput.output(feed, feedWriter);
@@ -135,14 +133,14 @@ public class RSSPublisher implements Publisher {
                 log.error("Unable to rendered feed due to: {}", e.getMessage());
             }
         } else {
-            log.warn("Unable to locate feed definition with ident={}", feedIdent);
+            log.warn("Unable to locate feed definition with Id={}", feedId);
         }
 
         previewArtifact = previewArtifact
                 .replace("\n", EMPTY)
                 .replace("\r", EMPTY);
 
-        return FeedPreview.from(feedIdent, previewArtifact);
+        return FeedPreview.from(feedId, previewArtifact);
     }
 
     private static final String RSS_PUBLISHER_ID = "RSS";

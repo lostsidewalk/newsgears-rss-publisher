@@ -8,13 +8,15 @@ import com.rometools.rome.feed.atom.*;
 import com.rometools.rome.feed.synd.SyndPerson;
 import com.rometools.rome.feed.synd.SyndPersonImpl;
 
+import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
 import java.util.Optional;
 
 import static java.util.Collections.singletonList;
 import static java.util.Comparator.comparing;
-import static java.util.stream.Collectors.toList;
+import static org.apache.commons.collections4.CollectionUtils.isNotEmpty;
+import static org.apache.commons.collections4.CollectionUtils.size;
 import static org.apache.commons.lang3.StringUtils.isNotBlank;
 
 class ATOMFeedBuilder {
@@ -51,8 +53,10 @@ class ATOMFeedBuilder {
         setFeedOptionalProperties(feed, getAtomConfigObj(feedDefinition));
         // entries
         List<Entry> entries = getEntries(stagingPosts, pubDate);
-        entries.forEach(e -> e.setSource(feed));
-        feed.setEntries(entries);
+        if (isNotEmpty(entries)) {
+            entries.forEach(e -> e.setSource(feed));
+            feed.setEntries(entries);
+        }
 
         return feed;
     }
@@ -84,7 +88,6 @@ class ATOMFeedBuilder {
             feed.setContributors(getContributors(atomConfigObj)); // ok
 //            feed.setInfo(getInfo(atomConfigObj)); // legacy
             feed.setCategories(getCategories(atomConfigObj)); // ok
-            feed.setXmlBase(getXmlBase(atomConfigObj)); // ok
         }
     }
 
@@ -104,7 +107,7 @@ class ATOMFeedBuilder {
 
     private static Content getDescription(FeedDefinition feedDefinition) {
         Content subtitle = new Content();
-        subtitle.setType("text/plain");
+        subtitle.setType("html");
         subtitle.setValue(feedDefinition.getDescription());
         return subtitle;
     }
@@ -165,17 +168,20 @@ class ATOMFeedBuilder {
         return null;
     }
 
-    private static String getXmlBase(JsonObject atomConfigObj) {
-        return getStringProperty(atomConfigObj, "xmlBase");
-    }
-
     //
     //
     //
 
     private static List<Entry> getEntries(List<StagingPost> stagingPosts, Date pubDate) {
-        return stagingPosts.stream()
-                .map(s -> ATOMFeedEntryBuilder.toEntry(s, pubDate))
-                .collect(toList());
+        List<Entry> entries = null;
+        if (isNotEmpty(stagingPosts)) {
+            entries = new ArrayList<>(size(stagingPosts));
+            for (StagingPost stagingPost : stagingPosts) {
+                Entry entry = ATOMFeedEntryBuilder.toEntry(stagingPost, pubDate);
+                entries.add(entry);
+            }
+        }
+
+        return entries;
     }
 }

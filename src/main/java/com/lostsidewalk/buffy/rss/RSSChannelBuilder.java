@@ -6,6 +6,8 @@ import com.lostsidewalk.buffy.feed.FeedDefinition;
 import com.lostsidewalk.buffy.post.StagingPost;
 import com.rometools.rome.feed.rss.*;
 
+import java.io.IOException;
+import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
 import java.util.Optional;
@@ -15,6 +17,8 @@ import static java.util.Collections.emptyList;
 import static java.util.Collections.singletonList;
 import static java.util.Comparator.comparing;
 import static java.util.stream.Collectors.toList;
+import static org.apache.commons.collections4.CollectionUtils.isNotEmpty;
+import static org.apache.commons.collections4.CollectionUtils.size;
 import static org.apache.commons.lang3.StringUtils.*;
 
 class RSSChannelBuilder {
@@ -31,7 +35,7 @@ class RSSChannelBuilder {
     // FEED DEFINITION
     //
 
-    Channel buildChannel(FeedDefinition feedDefinition, List<StagingPost> stagingPosts, Date pubDate) {
+    Channel buildChannel(FeedDefinition feedDefinition, List<StagingPost> stagingPosts, Date pubDate) throws IOException, ClassNotFoundException {
         Channel channel = new Channel();
         // feed type
         channel.setFeedType(this.configProps.getRssFeedType());
@@ -188,9 +192,15 @@ class RSSChannelBuilder {
     //
     //
 
-    private static List<Item> getItems(List<StagingPost> stagingPosts) {
-        return stagingPosts.stream()
-                .map(RSSChannelItemBuilder::toItem)
-                .collect(toList());
+    private static List<Item> getItems(List<StagingPost> stagingPosts) throws IOException, ClassNotFoundException {
+        List<Item> items = null;
+        if (isNotEmpty(stagingPosts)) {
+            items = new ArrayList<>(size(stagingPosts));
+            for (StagingPost stagingPost : stagingPosts) {
+                Item item = RSSChannelItemBuilder.toItem(stagingPost);
+                items.add(item);
+            }
+        }
+        return items;
     }
 }

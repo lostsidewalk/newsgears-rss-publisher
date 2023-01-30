@@ -134,9 +134,6 @@ class RSSPublisherTest_RSS extends BaseRSSPublisherTest {
         assertNotNull(guid);
         assertEquals("testPostUrl", guid.getValue());
         assertEquals(TEST_PUBLISH_TIMESTAMP, item.getPubDate());
-        Source source = item.getSource();
-        assertNotNull(source);
-        assertEquals("testSourceUrl", source.getUrl());
-        assertEquals("testSourceName", source.getValue());
+        assertNull(item.getSource());
     }
 }

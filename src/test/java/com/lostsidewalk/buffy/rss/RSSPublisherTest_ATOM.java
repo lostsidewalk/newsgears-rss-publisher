@@ -57,7 +57,7 @@ class RSSPublisherTest_ATOM extends BaseRSSPublisherTest {
         //
         com.rometools.rome.feed.atom.Content subtitle = feed.getSubtitle();
         assertNotNull(subtitle);
-        assertEquals("text/plain", subtitle.getType());
+        assertEquals("html", subtitle.getType());
         assertEquals("testDescription", subtitle.getValue());
         //
         assertNotNull(feed.getId());
@@ -128,7 +128,7 @@ class RSSPublisherTest_ATOM extends BaseRSSPublisherTest {
         // summary
         Content summary = entry.getSummary();
         assertNotNull(summary);
-        assertEquals("text/plain", summary.getType());
+        assertEquals("text", summary.getType());
         assertEquals("testPostDescription", summary.getValue());
     }
 
@@ -144,7 +144,7 @@ class RSSPublisherTest_ATOM extends BaseRSSPublisherTest {
         // rights
         assertEquals("testPostRights", entry.getRights());
         // xml base
-        assertEquals("testXmlBase", entry.getXmlBase());
+        assertNull(entry.getXmlBase());
         // authors
         List<SyndPerson> authors = entry.getAuthors();
         assertNotNull(authors);
