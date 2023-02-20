@@ -136,6 +136,7 @@ class BaseRSSPublisherTest {
             "testImporterId",
             666L,
             "testImporterDesc",
+            667L,
             "{}",
             "testSourceName",
             "testSourceUrl",
