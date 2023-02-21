@@ -6,7 +6,6 @@ import com.lostsidewalk.buffy.feed.FeedDefinition;
 import com.lostsidewalk.buffy.post.StagingPost;
 import com.rometools.rome.feed.rss.*;
 
-import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
@@ -35,7 +34,7 @@ class RSSChannelBuilder {
     // FEED DEFINITION
     //
 
-    Channel buildChannel(FeedDefinition feedDefinition, List<StagingPost> stagingPosts, Date pubDate) throws IOException, ClassNotFoundException {
+    Channel buildChannel(FeedDefinition feedDefinition, List<StagingPost> stagingPosts, Date pubDate) {
         Channel channel = new Channel();
         // feed type
         channel.setFeedType(this.configProps.getRssFeedType());
@@ -192,7 +191,7 @@ class RSSChannelBuilder {
     //
     //
 
-    private static List<Item> getItems(List<StagingPost> stagingPosts) throws IOException, ClassNotFoundException {
+    private static List<Item> getItems(List<StagingPost> stagingPosts) {
         List<Item> items = null;
         if (isNotEmpty(stagingPosts)) {
             items = new ArrayList<>(size(stagingPosts));
