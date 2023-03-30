@@ -68,7 +68,8 @@ class BaseRSSPublisherTest {
                 "}",
             "testCopyright",
             "testLanguage",
-            "testFeedImgSrc"
+            "testFeedImgSrc",
+            false
     );
     static {
         TEST_FEED_DEFINITION.setId(666L);
