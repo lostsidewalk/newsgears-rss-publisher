@@ -1,6 +1,6 @@
 package com.lostsidewalk.buffy.rss;
 
-import com.lostsidewalk.buffy.RenderedFeedDao;
+import com.lostsidewalk.buffy.model.RenderedFeedDao;
 import com.lostsidewalk.buffy.feed.FeedDefinition;
 import com.lostsidewalk.buffy.feed.FeedDefinitionDao;
 import com.lostsidewalk.buffy.post.*;

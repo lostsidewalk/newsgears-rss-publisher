@@ -1,6 +1,6 @@
 package com.lostsidewalk.buffy.rss;
 
-import com.lostsidewalk.buffy.Publisher;
+import com.lostsidewalk.buffy.publisher.Publisher;
 import com.lostsidewalk.buffy.model.RenderedATOMFeed;
 import com.rometools.rome.feed.atom.*;
 import com.rometools.rome.feed.synd.SyndPerson;

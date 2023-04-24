@@ -1,6 +1,6 @@
 package com.lostsidewalk.buffy.rss;
 
-import com.lostsidewalk.buffy.Publisher;
+import com.lostsidewalk.buffy.publisher.Publisher;
 import com.lostsidewalk.buffy.model.RenderedRSSFeed;
 import com.rometools.rome.feed.rss.*;
 import org.junit.jupiter.api.Test;
