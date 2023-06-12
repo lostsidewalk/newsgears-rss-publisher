@@ -2,8 +2,8 @@ package com.lostsidewalk.buffy.rss;
 
 import com.google.gson.Gson;
 import com.google.gson.JsonObject;
-import com.lostsidewalk.buffy.feed.FeedDefinition;
 import com.lostsidewalk.buffy.post.StagingPost;
+import com.lostsidewalk.buffy.queue.QueueDefinition;
 import com.rometools.rome.feed.rss.*;
 
 import java.util.ArrayList;
@@ -34,12 +34,12 @@ class RSSChannelBuilder {
     // FEED DEFINITION
     //
 
-    Channel buildChannel(FeedDefinition feedDefinition, List<StagingPost> stagingPosts, Date pubDate) {
+    Channel buildChannel(QueueDefinition queueDefinition, List<StagingPost> stagingPosts, Date pubDate) {
         Channel channel = new Channel();
         // feed type
         channel.setFeedType(this.configProps.getRssFeedType());
         // URI
-        channel.setUri(String.format(configProps.getChannelUriTemplate(), feedDefinition.getTransportIdent()));
+        channel.setUri(String.format(configProps.getChannelUriTemplate(), queueDefinition.getTransportIdent()));
         // last build date
         Date lastBuildDate = stagingPosts.stream()
                 .filter(s -> s.getLastUpdatedTimestamp() != null)
@@ -50,9 +50,9 @@ class RSSChannelBuilder {
         // pub date
         channel.setPubDate(pubDate);
         // required
-        setChannelRequiredProperties(channel, feedDefinition);
+        setChannelRequiredProperties(channel, queueDefinition);
         // optional
-        JsonObject rssConfigObj = getRssConfigObj(feedDefinition);
+        JsonObject rssConfigObj = getRssConfigObj(queueDefinition);
         setChannelOptionalProperties(channel, rssConfigObj);
         // items
         channel.setItems(getItems(stagingPosts));
@@ -60,15 +60,15 @@ class RSSChannelBuilder {
         return channel;
     }
 
-    private void setChannelRequiredProperties(Channel channel, FeedDefinition feedDefinition) {
-        channel.setTitle(feedDefinition.getTitle()); // GoUpstate.com News Headlines
-        channel.setLink(String.format(configProps.getChannelLinkTemplate(), feedDefinition.getTransportIdent())); // http://www.goupstate.com/
-        channel.setDescription(feedDefinition.getDescription()); //	The latest news from GoUpstate.com, a Spartanburg Herald-Journal Web site.
+    private void setChannelRequiredProperties(Channel channel, QueueDefinition queueDefinition) {
+        channel.setTitle(queueDefinition.getTitle()); // GoUpstate.com News Headlines
+        channel.setLink(String.format(configProps.getChannelLinkTemplate(), queueDefinition.getTransportIdent())); // http://www.goupstate.com/
+        channel.setDescription(queueDefinition.getDescription()); //	The latest news from GoUpstate.com, a Spartanburg Herald-Journal Web site.
         channel.setTtl(configProps.getChannelTtl());
-        channel.setLanguage(feedDefinition.getLanguage()); // en-us
-        channel.setCopyright(feedDefinition.getCopyright()); // Copyright 2002, Spartanburg Herald-Journal
-        channel.setGenerator(feedDefinition.getGenerator()); // MightyInHouse Content System v2.3
-        channel.setImage(getChannelImage(feedDefinition));
+        channel.setLanguage(queueDefinition.getLanguage()); // en-us
+        channel.setCopyright(queueDefinition.getCopyright()); // Copyright 2002, Spartanburg Herald-Journal
+        channel.setGenerator(queueDefinition.getGenerator()); // MightyInHouse Content System v2.3
+        channel.setImage(getChannelImage(queueDefinition));
     }
 
     private void setChannelOptionalProperties(Channel channel, JsonObject rssConfigObj) {
@@ -88,8 +88,8 @@ class RSSChannelBuilder {
     //
     //
 
-    private static JsonObject getRssConfigObj(FeedDefinition feedDefinition) {
-        JsonObject exportConfigObj = Optional.ofNullable(feedDefinition.getExportConfig())
+    private static JsonObject getRssConfigObj(QueueDefinition queueDefinition) {
+        JsonObject exportConfigObj = Optional.ofNullable(queueDefinition.getExportConfig())
                 .map(Object::toString)
                 .map(s -> GSON.fromJson(s, JsonObject.class))
                 .orElse(null);
@@ -98,12 +98,12 @@ class RSSChannelBuilder {
                 null;
     }
 
-    private Image getChannelImage(FeedDefinition feedDefinition) {
+    private Image getChannelImage(QueueDefinition queueDefinition) {
         Image image = new Image();
-        image.setUrl(String.format(configProps.getChannelImageUrlTemplate(), feedDefinition.getTransportIdent())); // URL of the image
-        image.setLink(String.format(configProps.getChannelUriTemplate(), feedDefinition.getTransportIdent())); // URL of the channel
-        image.setTitle(feedDefinition.getTitle());
-        image.setDescription(feedDefinition.getDescription());
+        image.setUrl(String.format(configProps.getChannelImageUrlTemplate(), queueDefinition.getTransportIdent())); // URL of the image
+        image.setLink(String.format(configProps.getChannelUriTemplate(), queueDefinition.getTransportIdent())); // URL of the channel
+        image.setTitle(queueDefinition.getTitle());
+        image.setDescription(queueDefinition.getDescription());
         image.setHeight(configProps.getChannelImageHeight()); // height of the thumbnail we serve
         image.setWidth(configProps.getChannelImageWidth()); // width of the thumbnail we serve
         return image;

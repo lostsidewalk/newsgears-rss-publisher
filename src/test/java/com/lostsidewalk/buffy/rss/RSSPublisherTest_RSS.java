@@ -25,7 +25,7 @@ class RSSPublisherTest_RSS extends BaseRSSPublisherTest {
             fail(e.getMessage());
         }
         // invoke test
-        Publisher.PubResult pubResult = rssPublisher.publishFeed(TEST_FEED_DEFINITION, singletonList(TEST_STAGING_POST), TEST_PUBLISH_TIMESTAMP);
+        Publisher.PubResult pubResult = rssPublisher.publishFeed(TEST_QUEUE_DEFINITION, singletonList(TEST_STAGING_POST), TEST_PUBLISH_TIMESTAMP);
         // evaluate the result
         assertNotNull(pubResult);
         RenderedRSSFeed renderedRSSFeed = rssChannelValueCapture.getValue();

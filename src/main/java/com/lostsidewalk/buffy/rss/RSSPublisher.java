@@ -5,11 +5,11 @@ import com.lostsidewalk.buffy.DataAccessException;
 import com.lostsidewalk.buffy.publisher.FeedPreview;
 import com.lostsidewalk.buffy.publisher.Publisher;
 import com.lostsidewalk.buffy.model.RenderedFeedDao;
-import com.lostsidewalk.buffy.feed.FeedDefinition;
-import com.lostsidewalk.buffy.feed.FeedDefinitionDao;
 import com.lostsidewalk.buffy.model.RenderedATOMFeed;
 import com.lostsidewalk.buffy.model.RenderedRSSFeed;
 import com.lostsidewalk.buffy.post.StagingPost;
+import com.lostsidewalk.buffy.queue.QueueDefinition;
+import com.lostsidewalk.buffy.queue.QueueDefinitionDao;
 import com.rometools.rome.feed.atom.Feed;
 import com.rometools.rome.feed.rss.Channel;
 import com.rometools.rome.io.WireFeedOutput;
@@ -36,7 +36,7 @@ public class RSSPublisher implements Publisher {
     ATOMFeedBuilder atomFeedBuilder;
 
     @Autowired
-    FeedDefinitionDao feedDefinitionDao;
+    QueueDefinitionDao queueDefinitionDao;
 
     @Autowired
     RenderedFeedDao renderedFeedDao;
@@ -47,17 +47,17 @@ public class RSSPublisher implements Publisher {
     }
 
     @Override
-    public PubResult publishFeed(FeedDefinition feedDefinition, List<StagingPost> stagingPosts, Date pubDate) {
+    public PubResult publishFeed(QueueDefinition queueDefinition, List<StagingPost> stagingPosts, Date pubDate) {
         List<Throwable> errors = new ArrayList<>();
-        String feedIdent = feedDefinition.getIdent();
-        String transportIdent = feedDefinition.getTransportIdent();
+        String queueIdent = queueDefinition.getIdent();
+        String transportIdent = queueDefinition.getTransportIdent();
 
-        log.info("Deploying RSS/ATOM feeds with ident={}", feedIdent);
+        log.info("Deploying RSS/ATOM queueIdent={}", queueIdent);
 
         try {
             // build/publish the RSS feed
-            Channel channel = this.rssChannelBuilder.buildChannel(feedDefinition, stagingPosts, pubDate);
-            log.info("Published RSS feed for feedIdent={}, transportIdent={}", feedIdent, transportIdent);
+            Channel channel = this.rssChannelBuilder.buildChannel(queueDefinition, stagingPosts, pubDate);
+            log.info("Published RSS feed for queueIdent={}, transportIdent={}", queueIdent, transportIdent);
             renderedFeedDao.putRSSFeedAtTransportIdent(transportIdent, RenderedRSSFeed.from(transportIdent, channel));
         } catch (Exception e) {
             errors.add(e);
@@ -65,10 +65,10 @@ public class RSSPublisher implements Publisher {
 
         try {
             // build/publish the ATOM feed
-            Feed feed = this.atomFeedBuilder.buildFeed(feedDefinition, stagingPosts, pubDate);
+            Feed feed = this.atomFeedBuilder.buildFeed(queueDefinition, stagingPosts, pubDate);
             RenderedATOMFeed renderedATOMFeed = RenderedATOMFeed.from(transportIdent, feed);
             renderedFeedDao.putATOMFeedAtTransportIdent(transportIdent, renderedATOMFeed);
-            log.info("Published ATOM feed for feedIdent={}, transportIdent={}", feedIdent, transportIdent);
+            log.info("Published ATOM feed for queueIdent={}, transportIdent={}", queueIdent, transportIdent);
         } catch (Exception e) {
             errors.add(e);
         }
@@ -92,7 +92,7 @@ public class RSSPublisher implements Publisher {
         // group posts by output file for tag
         Map<Long, List<StagingPost>> postsByFeedId = new HashMap<>();
         for (StagingPost incomingPost : incomingPosts) {
-            postsByFeedId.computeIfAbsent(incomingPost.getFeedId(), t -> new ArrayList<>()).add(incomingPost);
+            postsByFeedId.computeIfAbsent(incomingPost.getQueueId(), t -> new ArrayList<>()).add(incomingPost);
         }
         List<FeedPreview> feedPreviews = new ArrayList<>(postsByFeedId.keySet().size());
         for (Map.Entry<Long, List<StagingPost>> e : postsByFeedId.entrySet()) {
@@ -108,13 +108,13 @@ public class RSSPublisher implements Publisher {
     FeedPreview previewFeed(String username, Long feedId, List<StagingPost> stagingPosts, PubFormat format) throws DataAccessException {
         log.info("Previewing feed with id={}, format={}", (feedId == null ? "(all)" : feedId), format);
         String previewArtifact = EMPTY;
-        FeedDefinition feedDefinition = this.feedDefinitionDao.findByFeedId(username, feedId);
-        if (feedDefinition != null) {
-            String transportIdent = feedDefinition.getTransportIdent();
+        QueueDefinition queueDefinition = this.queueDefinitionDao.findByQueueId(username, feedId);
+        if (queueDefinition != null) {
+            String transportIdent = queueDefinition.getTransportIdent();
             try {
                 if (format == PubFormat.RSS) {
                     // preview the RSS feed
-                    Channel channel = this.rssChannelBuilder.buildChannel(feedDefinition, stagingPosts, new Date());
+                    Channel channel = this.rssChannelBuilder.buildChannel(queueDefinition, stagingPosts, new Date());
                     log.info("Rendered RSS feed for feedId={}, transportIdent={}", feedId, transportIdent);
                     WireFeedOutput wireFeedOutput = new WireFeedOutput();
                     StringWriter channelWriter = new StringWriter();
@@ -122,7 +122,7 @@ public class RSSPublisher implements Publisher {
                     previewArtifact = channelWriter.toString();
                 } else if (format == PubFormat.ATOM) {
                     // preview the ATOM feed
-                    Feed feed = this.atomFeedBuilder.buildFeed(feedDefinition, stagingPosts, new Date());
+                    Feed feed = this.atomFeedBuilder.buildFeed(queueDefinition, stagingPosts, new Date());
                     log.info("Published ATOM feed for feedId={}, transportIdent={}", feedId, transportIdent);
                     WireFeedOutput wireFeedOutput = new WireFeedOutput();
                     StringWriter feedWriter = new StringWriter();

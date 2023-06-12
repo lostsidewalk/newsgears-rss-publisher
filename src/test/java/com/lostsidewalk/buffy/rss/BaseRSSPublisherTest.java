@@ -1,9 +1,9 @@
 package com.lostsidewalk.buffy.rss;
 
 import com.lostsidewalk.buffy.model.RenderedFeedDao;
-import com.lostsidewalk.buffy.feed.FeedDefinition;
-import com.lostsidewalk.buffy.feed.FeedDefinitionDao;
 import com.lostsidewalk.buffy.post.*;
+import com.lostsidewalk.buffy.queue.QueueDefinition;
+import com.lostsidewalk.buffy.queue.QueueDefinitionDao;
 import com.rometools.modules.itunes.EntryInformationImpl;
 import com.rometools.modules.itunes.ITunes;
 import com.rometools.modules.mediarss.MediaEntryModuleImpl;
@@ -24,7 +24,7 @@ import java.util.List;
 class BaseRSSPublisherTest {
 
     @MockBean
-    FeedDefinitionDao feedDefinitionDao;
+    QueueDefinitionDao queueDefinitionDao;
 
     @MockBean
     RenderedFeedDao renderedFeedDao;
@@ -32,7 +32,7 @@ class BaseRSSPublisherTest {
     @Autowired
     RSSPublisher rssPublisher;
 
-    protected static final FeedDefinition TEST_FEED_DEFINITION = FeedDefinition.from(
+    protected static final QueueDefinition TEST_QUEUE_DEFINITION = QueueDefinition.from(
             "testFeedIdent",
             "testTitle",
             "testDescription",
@@ -72,7 +72,7 @@ class BaseRSSPublisherTest {
             false
     );
     static {
-        TEST_FEED_DEFINITION.setId(666L);
+        TEST_QUEUE_DEFINITION.setId(666L);
     }
 
     protected static final Date TEST_IMPORT_TIMESTAMP = new Date();

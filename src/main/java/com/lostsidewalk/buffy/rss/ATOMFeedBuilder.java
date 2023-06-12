@@ -2,8 +2,8 @@ package com.lostsidewalk.buffy.rss;
 
 import com.google.gson.Gson;
 import com.google.gson.JsonObject;
-import com.lostsidewalk.buffy.feed.FeedDefinition;
 import com.lostsidewalk.buffy.post.StagingPost;
+import com.lostsidewalk.buffy.queue.QueueDefinition;
 import com.rometools.rome.feed.atom.*;
 import com.rometools.rome.feed.synd.SyndPerson;
 import com.rometools.rome.feed.synd.SyndPersonImpl;
@@ -33,12 +33,12 @@ class ATOMFeedBuilder {
     // FEED DEFINITION
     //
 
-    Feed buildFeed(FeedDefinition feedDefinition, List<StagingPost> stagingPosts, Date pubDate) {
+    Feed buildFeed(QueueDefinition queueDefinition, List<StagingPost> stagingPosts, Date pubDate) {
         Feed feed = new Feed();
         // feed type
         feed.setFeedType(this.configProps.getAtomFeedType()); // ok
         // other links
-        feed.setOtherLinks(getOtherLinks(feedDefinition)); // ok
+        feed.setOtherLinks(getOtherLinks(queueDefinition)); // ok
         // updated
         // last build date
         Date lastBuildDate = stagingPosts.stream()
@@ -48,9 +48,9 @@ class ATOMFeedBuilder {
                 .orElse(null);
         feed.setUpdated(lastBuildDate); // ok
         // required
-        setFeedRequiredProperties(feed, feedDefinition);
+        setFeedRequiredProperties(feed, queueDefinition);
         // optional
-        setFeedOptionalProperties(feed, getAtomConfigObj(feedDefinition));
+        setFeedOptionalProperties(feed, getAtomConfigObj(queueDefinition));
         // entries
         List<Entry> entries = getEntries(stagingPosts, pubDate);
         if (isNotEmpty(entries)) {
@@ -61,25 +61,25 @@ class ATOMFeedBuilder {
         return feed;
     }
 
-    private List<Link> getOtherLinks(FeedDefinition feedDefinition) {
+    private List<Link> getOtherLinks(QueueDefinition queueDefinition) {
         Link link = new Link();
         link.setRel("self");
-        link.setHref(String.format(configProps.getChannelUriTemplate(), feedDefinition.getTransportIdent()));
+        link.setHref(String.format(configProps.getChannelUriTemplate(), queueDefinition.getTransportIdent()));
         return singletonList(link);
     }
 
-    private void setFeedRequiredProperties(Feed feed, FeedDefinition feedDefinition) {
-        feed.setTitle(feedDefinition.getTitle()); // ok
-        feed.setSubtitle(getDescription(feedDefinition)); // ok
-//        feed.setTagline(getDescription(feedDefinition)); // legacy
-        feed.setId(String.format(configProps.getChannelUriTemplate(), feedDefinition.getTransportIdent())); // ok
-        feed.setLanguage(feedDefinition.getLanguage()); // ok
-//        feed.setCopyright(feedDefinition.getCopyright()); // legacy
-        feed.setRights(feedDefinition.getCopyright()); // ok
-        feed.setGenerator(getGenerator(feedDefinition)); // ok
-//        feed.setModified(feedDefinition.getLastDeployed()); // legacy
-        feed.setLogo(String.format(configProps.getChannelImageUrlTemplate(), feedDefinition.getTransportIdent())); // ok
-        feed.setIcon(String.format(configProps.getChannelImageUrlTemplate(), feedDefinition.getTransportIdent())); // ok
+    private void setFeedRequiredProperties(Feed feed, QueueDefinition queueDefinition) {
+        feed.setTitle(queueDefinition.getTitle()); // ok
+        feed.setSubtitle(getDescription(queueDefinition)); // ok
+//        feed.setTagline(getDescription(queueDefinition)); // legacy
+        feed.setId(String.format(configProps.getChannelUriTemplate(), queueDefinition.getTransportIdent())); // ok
+        feed.setLanguage(queueDefinition.getLanguage()); // ok
+//        feed.setCopyright(queueDefinition.getCopyright()); // legacy
+        feed.setRights(queueDefinition.getCopyright()); // ok
+        feed.setGenerator(getGenerator(queueDefinition)); // ok
+//        feed.setModified(queueDefinition.getLastDeployed()); // legacy
+        feed.setLogo(String.format(configProps.getChannelImageUrlTemplate(), queueDefinition.getTransportIdent())); // ok
+        feed.setIcon(String.format(configProps.getChannelImageUrlTemplate(), queueDefinition.getTransportIdent())); // ok
     }
 
     private void setFeedOptionalProperties(Feed feed, JsonObject atomConfigObj) {
@@ -95,8 +95,8 @@ class ATOMFeedBuilder {
     //
     //
 
-    private static JsonObject getAtomConfigObj(FeedDefinition feedDefinition) {
-        JsonObject exportConfigObj = Optional.ofNullable(feedDefinition.getExportConfig())
+    private static JsonObject getAtomConfigObj(QueueDefinition queueDefinition) {
+        JsonObject exportConfigObj = Optional.ofNullable(queueDefinition.getExportConfig())
                 .map(Object::toString)
                 .map(s -> GSON.fromJson(s, JsonObject.class))
                 .orElse(null);
@@ -105,16 +105,16 @@ class ATOMFeedBuilder {
                 null;
     }
 
-    private static Content getDescription(FeedDefinition feedDefinition) {
+    private static Content getDescription(QueueDefinition queueDefinition) {
         Content subtitle = new Content();
         subtitle.setType("html");
-        subtitle.setValue(feedDefinition.getDescription());
+        subtitle.setValue(queueDefinition.getDescription());
         return subtitle;
     }
 
-    private static Generator getGenerator(FeedDefinition feedDefinition) {
+    private static Generator getGenerator(QueueDefinition queueDefinition) {
         Generator generator = new Generator();
-        String f = feedDefinition.getGenerator();
+        String f = queueDefinition.getGenerator();
         generator.setValue(f);
 //        generator.setUrl(EMPTY);
 //        generator.setVersion(EMPTY);
