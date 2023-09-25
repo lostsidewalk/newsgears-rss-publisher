@@ -13,7 +13,7 @@ import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.Mockito.doNothing;
 
-class RSSPublisherTest_RSS extends BaseRSSPublisherTest {
+class RSSPublisherTest extends BaseRSSPublisherTest {
 
     @Test
     public void testRssPublisher_RSS() {

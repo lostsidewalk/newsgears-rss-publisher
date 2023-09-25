@@ -21,13 +21,23 @@ import org.springframework.stereotype.Component;
 import java.io.StringWriter;
 import java.util.*;
 
+import static com.lostsidewalk.buffy.publisher.Publisher.PubFormat.ATOM;
+import static com.lostsidewalk.buffy.publisher.Publisher.PubFormat.RSS;
 import static java.time.Instant.now;
 import static org.apache.commons.collections4.CollectionUtils.size;
 import static org.apache.commons.lang3.StringUtils.EMPTY;
 
+/**
+ * The RSSPublisher class is responsible for publishing RSS and ATOM feeds based on staging posts.
+ * It utilizes configured builders to generate feeds and stores them in Redis.
+ * Additionally, it supports feed preview functionality and is capable of handling both RSS and ATOM formats.
+ */
 @Slf4j
 @Component
 public class RSSPublisher implements Publisher {
+
+    @Autowired
+    RSSPublisherConfigProps configProps;
 
     @Autowired
     RSSChannelBuilder rssChannelBuilder;
@@ -41,51 +51,91 @@ public class RSSPublisher implements Publisher {
     @Autowired
     RenderedFeedDao renderedFeedDao;
 
+    /**
+     * Initializes the RSSPublisher component after construction and logs the construction timestamp.
+     */
     @PostConstruct
-    public void postConstruct() {
+    protected void postConstruct() {
         log.info("RSS publisher constructed at {}", now());
     }
 
+    /**
+     * Publishes RSS and ATOM feeds for a specified queue definition and staging posts.
+     *
+     * @param queueDefinition The queue definition for which feeds are generated.
+     * @param stagingPosts    The staging posts to include in the feeds.
+     * @param pubDate         The publication date for the feeds.
+     * @return A map containing publication results for RSS and ATOM formats.
+     */
     @Override
-    public PubResult publishFeed(QueueDefinition queueDefinition, List<StagingPost> stagingPosts, Date pubDate) {
-        List<Throwable> errors = new ArrayList<>();
+    public Map<String, PubResult> publishFeed(QueueDefinition queueDefinition, List<StagingPost> stagingPosts, Date pubDate) {
+        Map<String, PubResult> pubResults = new HashMap<>();
         String queueIdent = queueDefinition.getIdent();
         String transportIdent = queueDefinition.getTransportIdent();
 
         log.info("Deploying RSS/ATOM queueIdent={}", queueIdent);
 
+        String rssPubUrl = null;
+        List<Throwable> rssErrors = new ArrayList<>();
         try {
             // build/publish the RSS feed
             Channel channel = this.rssChannelBuilder.buildChannel(queueDefinition, stagingPosts, pubDate);
-            log.info("Published RSS feed for queueIdent={}, transportIdent={}", queueIdent, transportIdent);
             renderedFeedDao.putRSSFeedAtTransportIdent(transportIdent, RenderedRSSFeed.from(transportIdent, channel));
+            rssPubUrl = String.format(configProps.getChannelLinkTemplate(), queueDefinition.getTransportIdent());
+            log.info("Published RSS feed for queueIdent={}, transportIdent={}", queueIdent, transportIdent);
         } catch (Exception e) {
-            errors.add(e);
+            rssErrors.add(e);
         }
+        pubResults.put(RSS_PUBLISHER_ID, PubResult.from(rssPubUrl, rssErrors, pubDate));
 
+        String atomPubUrl = null;
+        List<Throwable> atomErrors = new ArrayList<>();
         try {
             // build/publish the ATOM feed
             Feed feed = this.atomFeedBuilder.buildFeed(queueDefinition, stagingPosts, pubDate);
             RenderedATOMFeed renderedATOMFeed = RenderedATOMFeed.from(transportIdent, feed);
             renderedFeedDao.putATOMFeedAtTransportIdent(transportIdent, renderedATOMFeed);
-            log.info("Published ATOM feed for queueIdent={}, transportIdent={}", queueIdent, transportIdent);
+            atomPubUrl = String.format(configProps.getChannelUriTemplate(), queueDefinition.getTransportIdent());
+            log.info("Published ATOM feed for queueIdent={}, transportIdent={}, url={}", queueIdent, transportIdent, atomPubUrl);
         } catch (Exception e) {
-            errors.add(e);
+            atomErrors.add(e);
         }
+        pubResults.put(ATOM_PUBLISHER_ID, PubResult.from(atomPubUrl, atomErrors, pubDate));
 
-        return PubResult.from(getPublisherId(), errors, pubDate);
+        return pubResults;
     }
 
+    /**
+     * Retrieves the publisher identifier for this RSSPublisher.
+     *
+     * @return The publisher identifier.
+     */
     @Override
     public String getPublisherId() {
         return RSS_PUBLISHER_ID;
     }
 
+    /**
+     * Checks if the publisher supports a given publication format (RSS or ATOM).
+     *
+     * @param pubFormat The publication format to check.
+     * @return True if the publisher supports the format, false otherwise.
+     */
     @Override
     public boolean supportsFormat(PubFormat pubFormat) {
-        return pubFormat == PubFormat.RSS || pubFormat == PubFormat.ATOM;
+        return pubFormat == RSS || pubFormat == ATOM;
     }
 
+
+    /**
+     * Generates feed previews for a list of staging posts in the specified format.
+     *
+     * @param username       The username of the user.
+     * @param incomingPosts  The list of staging posts to generate previews for.
+     * @param format         The format of the feed previews (RSS or ATOM).
+     * @return A list of feed preview artifacts.
+     * @throws Exception If an error occurs during preview generation.
+     */
     @Override
     public List<FeedPreview> doPreview(String username, List<StagingPost> incomingPosts, PubFormat format) throws Exception {
         log.info("RSS publisher has to {} posts to preview at {}", size(incomingPosts), now());
@@ -112,7 +162,7 @@ public class RSSPublisher implements Publisher {
         if (queueDefinition != null) {
             String transportIdent = queueDefinition.getTransportIdent();
             try {
-                if (format == PubFormat.RSS) {
+                if (format == RSS) {
                     // preview the RSS feed
                     Channel channel = this.rssChannelBuilder.buildChannel(queueDefinition, stagingPosts, new Date());
                     log.info("Rendered RSS feed for feedId={}, transportIdent={}", feedId, transportIdent);
@@ -120,7 +170,7 @@ public class RSSPublisher implements Publisher {
                     StringWriter channelWriter = new StringWriter();
                     wireFeedOutput.output(channel, channelWriter);
                     previewArtifact = channelWriter.toString();
-                } else if (format == PubFormat.ATOM) {
+                } else if (format == ATOM) {
                     // preview the ATOM feed
                     Feed feed = this.atomFeedBuilder.buildFeed(queueDefinition, stagingPosts, new Date());
                     log.info("Published ATOM feed for feedId={}, transportIdent={}", feedId, transportIdent);
@@ -143,5 +193,7 @@ public class RSSPublisher implements Publisher {
         return FeedPreview.from(feedId, previewArtifact);
     }
 
-    private static final String RSS_PUBLISHER_ID = "RSS";
+    static final String RSS_PUBLISHER_ID = "RSS_20";
+
+    static final String ATOM_PUBLISHER_ID = "ATOM_10";
 }

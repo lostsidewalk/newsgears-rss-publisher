@@ -69,17 +69,29 @@ class ATOMFeedBuilder {
     }
 
     private void setFeedRequiredProperties(Feed feed, QueueDefinition queueDefinition) {
-        feed.setTitle(queueDefinition.getTitle()); // ok
-        feed.setSubtitle(getDescription(queueDefinition)); // ok
+        String title = queueDefinition.getTitle();
+        if (isNotBlank(title)) {
+            feed.setTitle(queueDefinition.getTitle()); // ok
+        }
+        Content description = getDescription(queueDefinition);
+        if (description != null) {
+            feed.setSubtitle(description); // ok
+        }
 //        feed.setTagline(getDescription(queueDefinition)); // legacy
         feed.setId(String.format(configProps.getChannelUriTemplate(), queueDefinition.getTransportIdent())); // ok
-        feed.setLanguage(queueDefinition.getLanguage()); // ok
+        feed.setLanguage(queueDefinition.getLanguage()); // legacy
 //        feed.setCopyright(queueDefinition.getCopyright()); // legacy
         feed.setRights(queueDefinition.getCopyright()); // ok
-        feed.setGenerator(getGenerator(queueDefinition)); // ok
+        Generator generator = getGenerator(queueDefinition);
+        if (generator != null) {
+            feed.setGenerator(generator); // ok
+        }
 //        feed.setModified(queueDefinition.getLastDeployed()); // legacy
-        feed.setLogo(String.format(configProps.getChannelImageUrlTemplate(), queueDefinition.getTransportIdent())); // ok
-        feed.setIcon(String.format(configProps.getChannelImageUrlTemplate(), queueDefinition.getTransportIdent())); // ok
+        String queueImgTransportIdent = queueDefinition.getQueueImgTransportIdent();
+        if (isNotBlank(queueImgTransportIdent)) {
+            feed.setLogo(String.format(configProps.getChannelImageUrlTemplate(), queueImgTransportIdent)); // ok
+            feed.setIcon(String.format(configProps.getChannelImageUrlTemplate(), queueImgTransportIdent)); // ok
+        }
     }
 
     private void setFeedOptionalProperties(Feed feed, JsonObject atomConfigObj) {
@@ -106,18 +118,25 @@ class ATOMFeedBuilder {
     }
 
     private static Content getDescription(QueueDefinition queueDefinition) {
-        Content subtitle = new Content();
-        subtitle.setType("html");
-        subtitle.setValue(queueDefinition.getDescription());
+        Content subtitle = null;
+        String description = queueDefinition.getDescription();
+        if (isNotBlank(description)) {
+            subtitle = new Content();
+            subtitle.setType("html");
+            subtitle.setValue(queueDefinition.getDescription());
+        }
         return subtitle;
     }
 
     private static Generator getGenerator(QueueDefinition queueDefinition) {
-        Generator generator = new Generator();
-        String f = queueDefinition.getGenerator();
-        generator.setValue(f);
-//        generator.setUrl(EMPTY);
-//        generator.setVersion(EMPTY);
+        Generator generator = null;
+        String generatorStr = queueDefinition.getGenerator();
+        if (isNotBlank(generatorStr)) {
+            generator = new Generator();
+            generator.setValue(generatorStr);
+//            generator.setUrl(EMPTY); // TODO: generator URL
+//            generator.setVersion(EMPTY); // generation version
+        }
         return generator;
     }
 

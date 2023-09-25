@@ -54,6 +54,11 @@ class RSSChannelBuilder {
         // optional
         JsonObject rssConfigObj = getRssConfigObj(queueDefinition);
         setChannelOptionalProperties(channel, rssConfigObj);
+        // channel image
+        Image channelImage = getChannelImage(queueDefinition);
+        if (channelImage != null) {
+            channel.setImage(channelImage);
+        }
         // items
         channel.setItems(getItems(stagingPosts));
 
@@ -61,23 +66,28 @@ class RSSChannelBuilder {
     }
 
     private void setChannelRequiredProperties(Channel channel, QueueDefinition queueDefinition) {
-        channel.setTitle(queueDefinition.getTitle()); // GoUpstate.com News Headlines
-        channel.setLink(String.format(configProps.getChannelLinkTemplate(), queueDefinition.getTransportIdent())); // http://www.goupstate.com/
-        channel.setDescription(queueDefinition.getDescription()); //	The latest news from GoUpstate.com, a Spartanburg Herald-Journal Web site.
+        // queue title defaults to queue ident if not specified
+        String queueTitle = defaultString(queueDefinition.getTitle(), queueDefinition.getIdent());
+        channel.setTitle(queueTitle);
+        // TODO: should be 'the URL of the HTML website corresponding to the channel'
+        channel.setLink(String.format(configProps.getChannelLinkTemplate(), queueDefinition.getTransportIdent()));
+        // queue description defaults to queue title if not specified
+        String queueDescription = defaultString(queueDefinition.getDescription(), queueTitle);
+        channel.setDescription(queueDescription);
         channel.setTtl(configProps.getChannelTtl());
-        channel.setLanguage(queueDefinition.getLanguage()); // en-us
-        channel.setCopyright(queueDefinition.getCopyright()); // Copyright 2002, Spartanburg Herald-Journal
-        channel.setGenerator(queueDefinition.getGenerator()); // MightyInHouse Content System v2.3
-        channel.setImage(getChannelImage(queueDefinition));
+        channel.setLanguage(queueDefinition.getLanguage());
+        channel.setCopyright(queueDefinition.getCopyright());
+        channel.setGenerator(queueDefinition.getGenerator());
     }
 
     private void setChannelOptionalProperties(Channel channel, JsonObject rssConfigObj) {
         if (rssConfigObj != null) {
-            channel.setManagingEditor(getManagingEditor(rssConfigObj)); // geo@herald.com (George Matesky)
-            channel.setWebMaster(getWebMaster(rssConfigObj)); // betty@herald.com (Betty Guernsey)
-            channel.setDocs(getDocs(rssConfigObj)); // http://blogs.law.harvard.edu/tech/rss
+            channel.setManagingEditor(getManagingEditor(rssConfigObj));
+            channel.setWebMaster(getWebMaster(rssConfigObj));
+            channel.setDocs(getDocs(rssConfigObj));
             channel.setCloud(getCloud(rssConfigObj));
-            channel.setRating(getRating(rssConfigObj)); // https://www.w3.org/PICS/
+            channel.setRating(getRating(rssConfigObj));
+            channel.setTextInput(getTextInput(rssConfigObj));
             channel.setSkipHours(getSkipHours(rssConfigObj));
             channel.setSkipDays(getSkipDays(rssConfigObj));
             channel.setCategories(getCategories(rssConfigObj));
@@ -99,13 +109,17 @@ class RSSChannelBuilder {
     }
 
     private Image getChannelImage(QueueDefinition queueDefinition) {
-        Image image = new Image();
-        image.setUrl(String.format(configProps.getChannelImageUrlTemplate(), queueDefinition.getTransportIdent())); // URL of the image
-        image.setLink(String.format(configProps.getChannelUriTemplate(), queueDefinition.getTransportIdent())); // URL of the channel
-        image.setTitle(queueDefinition.getTitle());
-        image.setDescription(queueDefinition.getDescription());
-        image.setHeight(configProps.getChannelImageHeight()); // height of the thumbnail we serve
-        image.setWidth(configProps.getChannelImageWidth()); // width of the thumbnail we serve
+        Image image = null;
+        String queueImgTransport = queueDefinition.getQueueImgTransportIdent();
+        if (isNotBlank(queueImgTransport)) {
+            image = new Image();
+            image.setUrl(String.format(configProps.getChannelImageUrlTemplate(), queueDefinition.getQueueImgTransportIdent())); // URL of the image
+            image.setLink(String.format(configProps.getChannelLinkTemplate(), queueDefinition.getTransportIdent())); // URL of the channel
+            image.setTitle(defaultString(queueDefinition.getTitle(), queueDefinition.getIdent()));
+            image.setDescription(queueDefinition.getDescription());
+            image.setHeight(configProps.getChannelImageHeight()); // height of the thumbnail we serve
+            image.setWidth(configProps.getChannelImageWidth()); // width of the thumbnail we serve
+        }
         return image;
     }
 
@@ -156,6 +170,23 @@ class RSSChannelBuilder {
 
     private static String getRating(JsonObject rssConfigObj) {
         return getStringProperty(rssConfigObj, "rating");
+    }
+
+    private static TextInput getTextInput(JsonObject rssConfigObj) {
+        String textInputDescription = getStringProperty(rssConfigObj, "textInputDescription");
+        String textInputLink = getStringProperty(rssConfigObj, "textInputLink");
+        String textInputTitle = getStringProperty(rssConfigObj, "textInputTitle");
+        String textInputName = getStringProperty(rssConfigObj, "textInputName");
+        if (isNotBlank(textInputDescription) || isNotBlank(textInputLink) || isNotBlank(textInputTitle) || isNotBlank(textInputName)) {
+            TextInput textInput = new TextInput();
+            textInput.setDescription(textInputDescription);
+            textInput.setLink(textInputLink);
+            textInput.setTitle(textInputTitle);
+            textInput.setName(textInputName);
+            return textInput;
+        }
+
+        return null;
     }
 
     private static List<Integer> getSkipHours(JsonObject rssConfigObj) {

@@ -29,7 +29,7 @@ class ATOMFeedEntryBuilder {
     }
 
     private static void setEntryRequiredProperties(Entry entry, StagingPost stagingPost) {
-        entry.setId(stagingPost.getPostUrl());
+        entry.setId(stagingPost.getPostUrl()); // TODO: this is required, but post URL can be null
         entry.setTitleEx(getTitleEx(stagingPost));
         entry.setUpdated(stagingPost.getLastUpdatedTimestamp());
         entry.setAlternateLinks(getAlternateLinks(stagingPost));

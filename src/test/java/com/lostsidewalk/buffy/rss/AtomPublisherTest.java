@@ -8,6 +8,7 @@ import org.junit.jupiter.api.Test;
 import org.mockito.ArgumentCaptor;
 
 import java.util.List;
+import java.util.Map;
 
 import static java.util.Collections.singletonList;
 import static org.apache.commons.collections4.CollectionUtils.size;
@@ -15,7 +16,7 @@ import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.Mockito.doNothing;
 
-class RSSPublisherTest_ATOM extends BaseRSSPublisherTest {
+class AtomPublisherTest extends BaseRSSPublisherTest {
 
     @Test
     public void testRssPublisher_ATOM() {
@@ -27,10 +28,11 @@ class RSSPublisherTest_ATOM extends BaseRSSPublisherTest {
             fail(e.getMessage());
         }
         // invoke test
-        Publisher.PubResult pubResult = rssPublisher.publishFeed(TEST_QUEUE_DEFINITION, singletonList(TEST_STAGING_POST), TEST_PUBLISH_TIMESTAMP);
+        Map<String, Publisher.PubResult> pubResults = rssPublisher.publishFeed(TEST_QUEUE_DEFINITION, singletonList(TEST_STAGING_POST), TEST_PUBLISH_TIMESTAMP);
+        Publisher.PubResult atomPubResult = pubResults.get(RSSPublisher.ATOM_PUBLISHER_ID);
         // evaluate the result
-        assertNotNull(pubResult);
-        assertEquals(0, size(pubResult.getErrors()));
+        assertNotNull(atomPubResult);
+        assertEquals(0, size(atomPubResult.getErrors()));
         RenderedATOMFeed renderedATOMFeed = atomFeedValueCapture.getValue();
         assertNotNull(renderedATOMFeed);
         assertEquals("testTransportIdent", renderedATOMFeed.getTransportIdent());

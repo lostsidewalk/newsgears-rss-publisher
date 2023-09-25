@@ -108,15 +108,10 @@ class RSSChannelItemBuilder {
     }
 
     private static Guid getGuid(StagingPost stagingPost) {
-        String postUrl = stagingPost.getPostUrl();
-        if (postUrl != null) {
-            Guid guid = new Guid();
-            guid.setValue(postUrl);
-            guid.setPermaLink(true);
-            return guid;
-        }
-
-        return null;
+        Guid guid = new Guid();
+        guid.setValue(stagingPost.getPostHash());
+        guid.setPermaLink(false);
+        return guid;
     }
 
     private static Content getContent(StagingPost stagingPost) {
