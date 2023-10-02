@@ -52,6 +52,13 @@ public class RSSPublisher implements Publisher {
     RenderedFeedDao renderedFeedDao;
 
     /**
+     * Default constructor; initializes the object.
+     */
+    RSSPublisher() {
+        super();
+    }
+
+    /**
      * Initializes the RSSPublisher component after construction and logs the construction timestamp.
      */
     @PostConstruct

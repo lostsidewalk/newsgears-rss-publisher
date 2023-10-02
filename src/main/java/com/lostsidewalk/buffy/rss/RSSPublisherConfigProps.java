@@ -21,6 +21,13 @@ public class RSSPublisherConfigProps {
     int channelTtl;
 
     /**
+     * Default constructor; initializes the object.
+     */
+    RSSPublisherConfigProps() {
+        super();
+    }
+
+    /**
      * Gets the configured channel image height.
      *
      * @return The channel image height.

@@ -15,6 +15,13 @@ public class RSSPublisherConfig {
     RSSPublisherConfigProps configProps;
 
     /**
+     * Default constructor; initializes the object.
+     */
+    RSSPublisherConfig() {
+        super();
+    }
+
+    /**
      * Creates a bean for the RSSChannelBuilder, which is responsible for building RSS channels based on configuration properties.
      *
      * @return An instance of {@link RSSChannelBuilder} configured with the properties from {@link RSSPublisherConfigProps}.
