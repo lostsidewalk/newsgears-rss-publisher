@@ -8,7 +8,7 @@ apply plugin: 'java-library'
 apply plugin: 'signing'
 
 group = 'com.lostsidewalk.newsgears'
-version = '0.5.8'
+version = '0.5.10'
 
 java {
     toolchain {
@@ -31,8 +31,8 @@ repositories {
 }
 
 dependencies {
-    api 'com.lostsidewalk.newsgears:newsgears-data:0.5.11'
-    api 'com.lostsidewalk.newsgears:newsgears-data:0.5.11:javadoc'
+    api 'com.lostsidewalk.newsgears:newsgears-data:0.5.12'
+    api 'com.lostsidewalk.newsgears:newsgears-data:0.5.12:javadoc'
 
     // SLF4J
     implementation 'org.slf4j:slf4j-api:2.0.5'
@@ -64,8 +64,6 @@ dependencies {
     testImplementation('org.springframework.boot:spring-boot-starter-test:3.1.2') {
         exclude group: 'com.vaadin.external.google', module: 'android-json'
     }
-    // junit-jupiter
-    testImplementation 'org.junit.jupiter:junit-jupiter-api:5.9.2'
 
     // lombok
     compileOnly 'org.projectlombok:lombok:1.18.26'
@@ -136,4 +134,8 @@ javadoc {
     if(JavaVersion.current().isJava9Compatible()) {
         options.addBooleanOption('html5', true)
     }
+}
+
+test {
+    useJUnitPlatform()
 }

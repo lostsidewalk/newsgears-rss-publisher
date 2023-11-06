@@ -8,6 +8,7 @@ import com.rometools.modules.itunes.EntryInformationImpl;
 import com.rometools.modules.itunes.ITunes;
 import com.rometools.modules.mediarss.MediaEntryModuleImpl;
 import com.rometools.modules.mediarss.types.Metadata;
+import lombok.extern.slf4j.Slf4j;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -18,11 +19,15 @@ import org.springframework.test.context.ContextConfiguration;
 import java.util.Date;
 import java.util.List;
 
-@ExtendWith(MockitoExtension.class)
-@SpringBootTest(classes = {TestConfig.class})
-@ContextConfiguration(classes = {RSSPublisher.class, RSSPublisherConfigProps.class})
-class BaseRSSPublisherTest {
 
+@SuppressWarnings("AbstractClassWithoutAbstractMethods") // not instantiable
+@Slf4j
+@ExtendWith(MockitoExtension.class)
+@SpringBootTest(classes = TestConfig.class)
+@ContextConfiguration(classes = {RSSPublisher.class, RSSPublisherConfigProps.class})
+abstract class BaseRSSPublisherTest {
+
+    @SuppressWarnings("WeakerAccess")
     @MockBean
     QueueDefinitionDao queueDefinitionDao;
 
@@ -32,7 +37,7 @@ class BaseRSSPublisherTest {
     @Autowired
     RSSPublisher rssPublisher;
 
-    protected static final QueueDefinition TEST_QUEUE_DEFINITION = QueueDefinition.from(
+    static final QueueDefinition TEST_QUEUE_DEFINITION = QueueDefinition.from(
             "testFeedIdent",
             "testTitle",
             "testDescription",
@@ -75,21 +80,21 @@ class BaseRSSPublisherTest {
         TEST_QUEUE_DEFINITION.setId(666L);
     }
 
-    protected static final Date TEST_IMPORT_TIMESTAMP = new Date();
+    private static final Date TEST_IMPORT_TIMESTAMP = new Date();
 
-    protected static final Date TEST_EXPIRATION_TIMESTAMP = new Date();
+    private static final Date TEST_EXPIRATION_TIMESTAMP = new Date();
 
-    protected static final Date TEST_PUBLISH_TIMESTAMP = new Date();
+    static final Date TEST_PUBLISH_TIMESTAMP = new Date();
 
-    protected static final Date TEST_LAST_UPDATED_TIMESTAMP = new Date();
+    private static final Date TEST_LAST_UPDATED_TIMESTAMP = new Date();
 
-    protected static final ContentObject TEST_POST_TITLE = ContentObject.from("text", "testPostTitle");
+    private static final ContentObject TEST_POST_TITLE = ContentObject.from("1", "text", "testPostTitle");
 
-    protected static final ContentObject TEST_POST_DESCRIPTION = ContentObject.from("text", "testPostDescription");
+    private static final ContentObject TEST_POST_DESCRIPTION = ContentObject.from("2", "text", "testPostDescription");
 
-    protected static final ContentObject TEST_POST_CONTENT = ContentObject.from("text", "testPostContent");
+    private static final ContentObject TEST_POST_CONTENT = ContentObject.from("3", "text", "testPostContent");
 
-    protected static final PostMedia TEST_POST_MEDIA;
+    private static final PostMedia TEST_POST_MEDIA;
     static {
         MediaEntryModuleImpl testMediaEntryModule = new MediaEntryModuleImpl();
         Metadata metadata = new Metadata();
@@ -97,13 +102,13 @@ class BaseRSSPublisherTest {
         TEST_POST_MEDIA = PostMedia.from(testMediaEntryModule);
     }
 
-    protected static final PostITunes TEST_POST_ITUNES;
+    private static final PostITunes TEST_POST_ITUNES;
     static {
         ITunes testITunes = new EntryInformationImpl();
         TEST_POST_ITUNES = PostITunes.from(testITunes);
     }
 
-    protected static final PostUrl TEST_POST_URL = new PostUrl();
+    private static final PostUrl TEST_POST_URL = new PostUrl();
     static {
         TEST_POST_URL.setTitle("testUrlTitle");
         TEST_POST_URL.setRel("testUrlRel");
@@ -112,28 +117,28 @@ class BaseRSSPublisherTest {
         TEST_POST_URL.setType("testUrlType");
     }
 
-    protected static final PostPerson TEST_POST_CONTRIBUTOR = new PostPerson();
+    private static final PostPerson TEST_POST_CONTRIBUTOR = new PostPerson();
     static {
         TEST_POST_CONTRIBUTOR.setName("testContributorName");
         TEST_POST_CONTRIBUTOR.setUri("testContributorUri");
         TEST_POST_CONTRIBUTOR.setEmail("testContributorEmail");
     }
 
-    protected static final PostPerson TEST_POST_AUTHOR = new PostPerson();
+    private static final PostPerson TEST_POST_AUTHOR = new PostPerson();
     static {
         TEST_POST_AUTHOR.setName("testAuthorName");
         TEST_POST_AUTHOR.setUri("testAuthorUri");
         TEST_POST_AUTHOR.setEmail("testAuthorEmail");
     }
 
-    protected static final PostEnclosure TEST_POST_ENCLOSURE = new PostEnclosure();
+    private static final PostEnclosure TEST_POST_ENCLOSURE = new PostEnclosure();
     static {
         TEST_POST_ENCLOSURE.setType("testEnclosureType");
         TEST_POST_ENCLOSURE.setUrl("testEnclosureUrl");
         TEST_POST_ENCLOSURE.setLength(4821L);
     }
 
-    protected static final StagingPost TEST_STAGING_POST = StagingPost.from(
+    static final StagingPost TEST_STAGING_POST = StagingPost.from(
             "testImporterId",
             666L,
             "testImporterDesc",
@@ -159,4 +164,13 @@ class BaseRSSPublisherTest {
             List.of(TEST_POST_ENCLOSURE), // enclosures
             TEST_LAST_UPDATED_TIMESTAMP // last updated timestamp
     );
+
+    @Override
+    public String toString() {
+        return "BaseRSSPublisherTest{" +
+                "queueDefinitionDao=" + queueDefinitionDao +
+                ", renderedFeedDao=" + renderedFeedDao +
+                ", rssPublisher=" + rssPublisher +
+                '}';
+    }
 }

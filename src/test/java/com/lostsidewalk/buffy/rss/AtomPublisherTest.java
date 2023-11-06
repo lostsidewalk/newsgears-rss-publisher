@@ -1,9 +1,11 @@
 package com.lostsidewalk.buffy.rss;
 
+import com.lostsidewalk.buffy.DataAccessException;
 import com.lostsidewalk.buffy.publisher.Publisher;
 import com.lostsidewalk.buffy.model.RenderedATOMFeed;
 import com.rometools.rome.feed.atom.*;
 import com.rometools.rome.feed.synd.SyndPerson;
+import lombok.extern.slf4j.Slf4j;
 import org.junit.jupiter.api.Test;
 import org.mockito.ArgumentCaptor;
 
@@ -16,6 +18,8 @@ import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.Mockito.doNothing;
 
+
+@Slf4j
 class AtomPublisherTest extends BaseRSSPublisherTest {
 
     @Test
@@ -23,8 +27,8 @@ class AtomPublisherTest extends BaseRSSPublisherTest {
         // setup mocks
         ArgumentCaptor<RenderedATOMFeed> atomFeedValueCapture = ArgumentCaptor.forClass(RenderedATOMFeed.class);
         try {
-            doNothing().when(this.renderedFeedDao).putATOMFeedAtTransportIdent(anyString(), atomFeedValueCapture.capture());
-        } catch (Exception e) {
+            doNothing().when(renderedFeedDao).putATOMFeedAtTransportIdent(anyString(), atomFeedValueCapture.capture());
+        } catch (DataAccessException e) {
             fail(e.getMessage());
         }
         // invoke test
@@ -53,7 +57,7 @@ class AtomPublisherTest extends BaseRSSPublisherTest {
         assertEquals(1, otherLinks.size());
         Link link = otherLinks.get(0);
         assertEquals("self", link.getRel());
-        assertEquals("https://localhost/rss/testTransportIdent", link.getHref());
+        assertEquals("https://localhost/atom/testTransportIdent", link.getHref());
         //
         assertEquals("testTitle", feed.getTitle());
         //
@@ -85,7 +89,7 @@ class AtomPublisherTest extends BaseRSSPublisherTest {
         assertEquals("testCategoryScheme", category.getScheme());
         assertEquals("testCategoryScheme", category.getSchemeResolved());
         //
-        assertEquals("https://localhost/rss/testTransportIdent", feed.getLogo());
+        assertEquals("https://localhost/img/C9E13DDA9F5D9DD19DE431CB4758CC34", feed.getLogo());
     }
 
     private static void validateFeedOptionalProperties(Feed feed) {

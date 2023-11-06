@@ -7,18 +7,19 @@ import com.lostsidewalk.buffy.queue.QueueDefinition;
 import com.rometools.rome.feed.atom.*;
 import com.rometools.rome.feed.synd.SyndPerson;
 import com.rometools.rome.feed.synd.SyndPersonImpl;
+import lombok.extern.slf4j.Slf4j;
 
-import java.util.ArrayList;
-import java.util.Date;
-import java.util.List;
-import java.util.Optional;
+import java.util.*;
 
 import static java.util.Collections.singletonList;
 import static java.util.Comparator.comparing;
 import static org.apache.commons.collections4.CollectionUtils.isNotEmpty;
 import static org.apache.commons.collections4.CollectionUtils.size;
+import static org.apache.commons.lang3.StringUtils.defaultString;
 import static org.apache.commons.lang3.StringUtils.isNotBlank;
 
+
+@Slf4j
 class ATOMFeedBuilder {
 
     private static final Gson GSON = new Gson();
@@ -33,16 +34,16 @@ class ATOMFeedBuilder {
     // FEED DEFINITION
     //
 
-    Feed buildFeed(QueueDefinition queueDefinition, List<StagingPost> stagingPosts, Date pubDate) {
+    final Feed buildFeed(QueueDefinition queueDefinition, Collection<? extends StagingPost> stagingPosts, Date pubDate) {
         Feed feed = new Feed();
         // feed type
-        feed.setFeedType(this.configProps.getAtomFeedType()); // ok
+        feed.setFeedType(configProps.getAtomFeedType()); // ok
         // other links
         feed.setOtherLinks(getOtherLinks(queueDefinition)); // ok
         // updated
         // last build date
         Date lastBuildDate = stagingPosts.stream()
-                .filter(s -> s.getLastUpdatedTimestamp() != null)
+                .filter(stagingPost -> stagingPost.getLastUpdatedTimestamp() != null)
                 .max(comparing(StagingPost::getLastUpdatedTimestamp))
                 .map(StagingPost::getLastUpdatedTimestamp)
                 .orElse(null);
@@ -69,24 +70,15 @@ class ATOMFeedBuilder {
     }
 
     private void setFeedRequiredProperties(Feed feed, QueueDefinition queueDefinition) {
-        String title = queueDefinition.getTitle();
-        if (isNotBlank(title)) {
-            feed.setTitle(queueDefinition.getTitle()); // ok
-        }
-        Content description = getDescription(queueDefinition);
-        if (description != null) {
-            feed.setSubtitle(description); // ok
-        }
+        feed.setTitle(defaultString(queueDefinition.getTitle(), queueDefinition.getIdent())); // ok
+        feed.setSubtitle(getDescription(queueDefinition)); // ok
 //        feed.setTagline(getDescription(queueDefinition)); // legacy
         feed.setId(String.format(configProps.getChannelUriTemplate(), queueDefinition.getTransportIdent())); // ok
         feed.setLanguage(queueDefinition.getLanguage()); // legacy
 //        feed.setCopyright(queueDefinition.getCopyright()); // legacy
         feed.setRights(queueDefinition.getCopyright()); // ok
-        Generator generator = getGenerator(queueDefinition);
-        if (generator != null) {
-            feed.setGenerator(generator); // ok
-        }
-//        feed.setModified(queueDefinition.getLastDeployed()); // legacy
+        feed.setGenerator(getGenerator(queueDefinition)); // ok
+        //        feed.setModified(queueDefinition.getLastDeployed()); // legacy
         String queueImgTransportIdent = queueDefinition.getQueueImgTransportIdent();
         if (isNotBlank(queueImgTransportIdent)) {
             feed.setLogo(String.format(configProps.getChannelImageUrlTemplate(), queueImgTransportIdent)); // ok
@@ -94,7 +86,22 @@ class ATOMFeedBuilder {
         }
     }
 
-    private void setFeedOptionalProperties(Feed feed, JsonObject atomConfigObj) {
+    private Generator getGenerator(QueueDefinition queueDefinition) {
+        Generator generator = new Generator();
+        String generatorStr = queueDefinition.getGenerator();
+        if (isNotBlank(generatorStr)) {
+            generator.setValue(generatorStr);
+//            generator.setUrl(EMPTY); // TODO: generator URL
+//            generator.setVersion(EMPTY); // generation version
+        } else {
+            generator.setValue(configProps.getDefaultGeneratorValue());
+            generator.setUrl(configProps.getDefaultGeneratorUrl());
+            generator.setVersion(configProps.getDefaultGeneratorVersion());
+        }
+        return generator;
+    }
+
+    private static void setFeedOptionalProperties(Feed feed, JsonObject atomConfigObj) {
         if (atomConfigObj != null) {
             feed.setAuthors(getAuthors(atomConfigObj)); // ok
             feed.setContributors(getContributors(atomConfigObj)); // ok
@@ -118,26 +125,16 @@ class ATOMFeedBuilder {
     }
 
     private static Content getDescription(QueueDefinition queueDefinition) {
-        Content subtitle = null;
+        Content subtitle = new Content();
         String description = queueDefinition.getDescription();
         if (isNotBlank(description)) {
-            subtitle = new Content();
             subtitle.setType("html");
             subtitle.setValue(queueDefinition.getDescription());
+        } else {
+            subtitle.setType("text");
+            subtitle.setValue(queueDefinition.getIdent());
         }
         return subtitle;
-    }
-
-    private static Generator getGenerator(QueueDefinition queueDefinition) {
-        Generator generator = null;
-        String generatorStr = queueDefinition.getGenerator();
-        if (isNotBlank(generatorStr)) {
-            generator = new Generator();
-            generator.setValue(generatorStr);
-//            generator.setUrl(EMPTY); // TODO: generator URL
-//            generator.setVersion(EMPTY); // generation version
-        }
-        return generator;
     }
 
     //
@@ -145,7 +142,10 @@ class ATOMFeedBuilder {
     //
 
     private static String getStringProperty(JsonObject obj, String propertyName) {
-        return obj == null ? null : obj.has(propertyName) ? obj.get(propertyName).getAsString() : null;
+        if (obj != null) {
+            if (obj.has(propertyName)) return obj.get(propertyName).getAsString();
+        }
+        return null;
     }
 
     private static List<SyndPerson> getAuthors(JsonObject atomConfigObj) {
@@ -191,7 +191,7 @@ class ATOMFeedBuilder {
     //
     //
 
-    private static List<Entry> getEntries(List<StagingPost> stagingPosts, Date pubDate) {
+    private static List<Entry> getEntries(Collection<? extends StagingPost> stagingPosts, Date pubDate) {
         List<Entry> entries = null;
         if (isNotEmpty(stagingPosts)) {
             entries = new ArrayList<>(size(stagingPosts));
@@ -202,5 +202,12 @@ class ATOMFeedBuilder {
         }
 
         return entries;
+    }
+
+    @Override
+    public final String toString() {
+        return "ATOMFeedBuilder{" +
+                "configProps=" + configProps +
+                '}';
     }
 }

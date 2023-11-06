@@ -5,11 +5,9 @@ import com.google.gson.JsonObject;
 import com.lostsidewalk.buffy.post.StagingPost;
 import com.lostsidewalk.buffy.queue.QueueDefinition;
 import com.rometools.rome.feed.rss.*;
+import lombok.extern.slf4j.Slf4j;
 
-import java.util.ArrayList;
-import java.util.Date;
-import java.util.List;
-import java.util.Optional;
+import java.util.*;
 
 import static java.util.Arrays.stream;
 import static java.util.Collections.emptyList;
@@ -20,6 +18,8 @@ import static org.apache.commons.collections4.CollectionUtils.isNotEmpty;
 import static org.apache.commons.collections4.CollectionUtils.size;
 import static org.apache.commons.lang3.StringUtils.*;
 
+
+@Slf4j
 class RSSChannelBuilder {
 
     private static final Gson GSON = new Gson();
@@ -34,15 +34,15 @@ class RSSChannelBuilder {
     // FEED DEFINITION
     //
 
-    Channel buildChannel(QueueDefinition queueDefinition, List<StagingPost> stagingPosts, Date pubDate) {
+    final Channel buildChannel(QueueDefinition queueDefinition, Collection<? extends StagingPost> stagingPosts, Date pubDate) {
         Channel channel = new Channel();
         // feed type
-        channel.setFeedType(this.configProps.getRssFeedType());
+        channel.setFeedType(configProps.getRssFeedType());
         // URI
         channel.setUri(String.format(configProps.getChannelUriTemplate(), queueDefinition.getTransportIdent()));
         // last build date
         Date lastBuildDate = stagingPosts.stream()
-                .filter(s -> s.getLastUpdatedTimestamp() != null)
+                .filter(stagingPost -> stagingPost.getLastUpdatedTimestamp() != null)
                 .max(comparing(StagingPost::getLastUpdatedTimestamp))
                 .map(StagingPost::getLastUpdatedTimestamp)
                 .orElse(null);
@@ -77,10 +77,10 @@ class RSSChannelBuilder {
         channel.setTtl(configProps.getChannelTtl());
         channel.setLanguage(queueDefinition.getLanguage());
         channel.setCopyright(queueDefinition.getCopyright());
-        channel.setGenerator(queueDefinition.getGenerator());
+        channel.setGenerator(defaultString(queueDefinition.getGenerator(), configProps.getDefaultGeneratorValue()));
     }
 
-    private void setChannelOptionalProperties(Channel channel, JsonObject rssConfigObj) {
+    private static void setChannelOptionalProperties(Channel channel, JsonObject rssConfigObj) {
         if (rssConfigObj != null) {
             channel.setManagingEditor(getManagingEditor(rssConfigObj));
             channel.setWebMaster(getWebMaster(rssConfigObj));
@@ -128,11 +128,17 @@ class RSSChannelBuilder {
     //
 
     private static String getStringProperty(JsonObject obj, String propertyName) {
-        return obj == null ? null : obj.has(propertyName) ? obj.get(propertyName).getAsString() : null;
+        if (obj != null) {
+            if (obj.has(propertyName)) return obj.get(propertyName).getAsString();
+        }
+        return null;
     }
 
     private static Integer getIntegerProperty(JsonObject obj, @SuppressWarnings("SameParameterValue") String propertyName) {
-        return obj == null ? null : obj.has(propertyName) ? obj.get(propertyName).getAsNumber().intValue() : null;
+        if (obj != null) {
+            if (obj.has(propertyName)) return obj.get(propertyName).getAsNumber().intValue();
+        }
+        return null;
     }
 
     private static String getManagingEditor(JsonObject rssConfigObj) {
@@ -222,7 +228,7 @@ class RSSChannelBuilder {
     //
     //
 
-    private static List<Item> getItems(List<StagingPost> stagingPosts) {
+    private static List<Item> getItems(Collection<? extends StagingPost> stagingPosts) {
         List<Item> items = null;
         if (isNotEmpty(stagingPosts)) {
             items = new ArrayList<>(size(stagingPosts));
@@ -232,5 +238,12 @@ class RSSChannelBuilder {
             }
         }
         return items;
+    }
+
+    @Override
+    public final String toString() {
+        return "RSSChannelBuilder{" +
+                "configProps=" + configProps +
+                '}';
     }
 }

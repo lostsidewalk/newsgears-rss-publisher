@@ -5,6 +5,7 @@ import com.rometools.modules.itunes.ITunes;
 import com.rometools.modules.mediarss.MediaEntryModule;
 import com.rometools.rome.feed.module.Module;
 import com.rometools.rome.feed.rss.*;
+import lombok.extern.slf4j.Slf4j;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -12,6 +13,8 @@ import java.util.List;
 import static org.apache.commons.collections4.CollectionUtils.isNotEmpty;
 import static org.apache.commons.collections4.CollectionUtils.size;
 
+
+@Slf4j
 class RSSChannelItemBuilder {
 
     static Item toItem(StagingPost stagingPost) {

@@ -10,6 +10,7 @@ import com.rometools.rome.feed.atom.Link;
 import com.rometools.rome.feed.module.Module;
 import com.rometools.rome.feed.synd.SyndPerson;
 import com.rometools.rome.feed.synd.SyndPersonImpl;
+import lombok.extern.slf4j.Slf4j;
 
 import java.util.ArrayList;
 import java.util.Date;
@@ -18,7 +19,10 @@ import java.util.List;
 import static java.util.Collections.singletonList;
 import static org.apache.commons.collections4.CollectionUtils.isNotEmpty;
 import static org.apache.commons.collections4.CollectionUtils.size;
+import static org.apache.commons.lang3.StringUtils.isNotBlank;
 
+
+@Slf4j
 class ATOMFeedEntryBuilder {
 
     static Entry toEntry(StagingPost stagingPost, Date pubDate) {
@@ -32,7 +36,6 @@ class ATOMFeedEntryBuilder {
         entry.setId(stagingPost.getPostUrl()); // TODO: this is required, but post URL can be null
         entry.setTitleEx(getTitleEx(stagingPost));
         entry.setUpdated(stagingPost.getLastUpdatedTimestamp());
-        entry.setAlternateLinks(getAlternateLinks(stagingPost));
         entry.setSummary(getSummary(stagingPost));
     }
 
@@ -48,13 +51,6 @@ class ATOMFeedEntryBuilder {
         return null;
     }
 
-    private static List<Link> getAlternateLinks(StagingPost stagingPost) {
-        Link link = new Link();
-        link.setHref(stagingPost.getPostUrl());
-        link.setRel("alternate");
-        return singletonList(link);
-    }
-
     private static Content getSummary(StagingPost stagingPost) {
         ContentObject postDesc = stagingPost.getPostDesc();
         if (postDesc != null) {
@@ -68,7 +64,13 @@ class ATOMFeedEntryBuilder {
     }
 
     private static void setEntryOptionalProperties(Entry entry, StagingPost stagingPost, Date pubDate) {
-        entry.setOtherLinks(getOtherLinks(stagingPost));
+        entry.setAlternateLinks(getAlternateLinks(stagingPost));
+        //
+        List<Link> otherLinks = new ArrayList<>(16);
+        otherLinks.addAll(getPostUrlLinks(stagingPost));
+        otherLinks.addAll(getEnclosureLinks(stagingPost));
+        entry.setOtherLinks(otherLinks);
+        //
         entry.setAuthors(getAuthors(stagingPost));
         entry.setContributors(getContributors(stagingPost));
         entry.setRights(stagingPost.getPostRights());
@@ -80,12 +82,23 @@ class ATOMFeedEntryBuilder {
         entry.setModules(getModules(stagingPost));
     }
 
-    private static List<Link> getOtherLinks(StagingPost stagingPost) {
+    private static List<Link> getAlternateLinks(StagingPost stagingPost) {
+        List<Link> links = null;
+        String postUrl = stagingPost.getPostUrl();
+        if (isNotBlank(postUrl)) {
+            Link link = new Link();
+            link.setHref(stagingPost.getPostUrl());
+            link.setRel("alternate");
+            links = singletonList(link);
+        }
+        return links;
+    }
+
+    private static List<Link> getPostUrlLinks(StagingPost stagingPost) {
         // Note: skip the link w/rel=alternate (accounted for above)
         List<PostUrl> postUrls = stagingPost.getPostUrls();
-        List<Link> links = null;
+        List<Link> links = new ArrayList<>(size(postUrls));
         if (isNotEmpty(postUrls)) {
-            links = new ArrayList<>(size(postUrls));
             for (PostUrl postUrl : postUrls) {
                 Link link = new Link();
                 link.setTitle(postUrl.getTitle());
@@ -93,6 +106,24 @@ class ATOMFeedEntryBuilder {
                 link.setHref(postUrl.getHref());
                 link.setHreflang(postUrl.getHreflang());
                 link.setRel(postUrl.getRel());
+                links.add(link);
+            }
+        }
+
+        return links;
+    }
+
+    private static List<Link> getEnclosureLinks(StagingPost stagingPost) {
+        //
+        List<PostEnclosure> postEnclosures = stagingPost.getEnclosures();
+        List<Link> links = new ArrayList<>(size(postEnclosures));
+        if (isNotEmpty(postEnclosures)) {
+            for (PostEnclosure postEnclosure : postEnclosures) {
+                Link link = new Link();
+                link.setType(postEnclosure.getType());
+                link.setLength(postEnclosure.getLength());
+                link.setHref(postEnclosure.getUrl());
+                link.setRel("enclosure");
                 links.add(link);
             }
         }
@@ -156,10 +187,10 @@ class ATOMFeedEntryBuilder {
         if (isNotEmpty(postContents)) {
             contents = new ArrayList<>(size(postContents));
             for (ContentObject p : postContents) {
-                Content c = new Content();
-                c.setType(p.getType());
-                c.setValue(p.getValue());
-                contents.add(c);
+                Content content = new Content();
+                content.setType(p.getType());
+                content.setValue(p.getValue());
+                contents.add(content);
             }
         }
 

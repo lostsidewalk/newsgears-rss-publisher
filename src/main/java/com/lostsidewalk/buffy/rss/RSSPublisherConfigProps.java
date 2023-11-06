@@ -1,5 +1,6 @@
 package com.lostsidewalk.buffy.rss;
 
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.boot.context.properties.ConfigurationProperties;
 import org.springframework.context.annotation.Configuration;
 
@@ -7,6 +8,7 @@ import org.springframework.context.annotation.Configuration;
  * The RSSPublisherConfigProps class holds configuration properties related to RSS feed publishing.
  * These properties are read from the application configuration and can be customized for RSS feed generation.
  */
+@Slf4j
 @Configuration
 @ConfigurationProperties(prefix = "rss.publisher")
 public class RSSPublisherConfigProps {
@@ -19,12 +21,14 @@ public class RSSPublisherConfigProps {
     String rssFeedType;
     String atomFeedType;
     int channelTtl;
+    String defaultGeneratorValue;
+    String defaultGeneratorUrl;
+    String defaultGeneratorVersion;
 
     /**
      * Default constructor; initializes the object.
      */
     RSSPublisherConfigProps() {
-        super();
     }
 
     /**
@@ -32,7 +36,7 @@ public class RSSPublisherConfigProps {
      *
      * @return The channel image height.
      */
-    public int getChannelImageHeight() {
+    public final int getChannelImageHeight() {
         return channelImageHeight;
     }
 
@@ -42,7 +46,7 @@ public class RSSPublisherConfigProps {
      * @param channelImageHeight The channel image height to set.
      */
     @SuppressWarnings("unused")
-    public void setChannelImageHeight(int channelImageHeight) {
+    public final void setChannelImageHeight(int channelImageHeight) {
         this.channelImageHeight = channelImageHeight;
     }
 
@@ -51,7 +55,7 @@ public class RSSPublisherConfigProps {
      *
      * @return The channel image width.
      */
-    public int getChannelImageWidth() {
+    public final int getChannelImageWidth() {
         return channelImageWidth;
     }
 
@@ -61,7 +65,7 @@ public class RSSPublisherConfigProps {
      * @param channelImageWidth The channel image width to set.
      */
     @SuppressWarnings("unused")
-    public void setChannelImageWidth(int channelImageWidth) {
+    public final void setChannelImageWidth(int channelImageWidth) {
         this.channelImageWidth = channelImageWidth;
     }
 
@@ -70,7 +74,7 @@ public class RSSPublisherConfigProps {
      *
      * @return The channel link template.
      */
-    public String getChannelLinkTemplate() {
+    public final String getChannelLinkTemplate() {
         return channelLinkTemplate;
     }
 
@@ -80,7 +84,7 @@ public class RSSPublisherConfigProps {
      * @param channelLinkTemplate The channel link template to set.
      */
     @SuppressWarnings("unused")
-    public void setChannelLinkTemplate(String channelLinkTemplate) {
+    public final void setChannelLinkTemplate(String channelLinkTemplate) {
         this.channelLinkTemplate = channelLinkTemplate;
     }
 
@@ -89,7 +93,7 @@ public class RSSPublisherConfigProps {
      *
      * @return The channel URI template.
      */
-    public String getChannelUriTemplate() {
+    public final String getChannelUriTemplate() {
         return channelUriTemplate;
     }
 
@@ -99,7 +103,7 @@ public class RSSPublisherConfigProps {
      * @param channelUriTemplate The channel URI template to set.
      */
     @SuppressWarnings("unused")
-    public void setChannelUriTemplate(String channelUriTemplate) {
+    public final void setChannelUriTemplate(String channelUriTemplate) {
         this.channelUriTemplate = channelUriTemplate;
     }
 
@@ -108,7 +112,7 @@ public class RSSPublisherConfigProps {
      *
      * @return The channel image URL template.
      */
-    public String getChannelImageUrlTemplate() {
+    public final String getChannelImageUrlTemplate() {
         return channelImageUrlTemplate;
     }
 
@@ -118,7 +122,7 @@ public class RSSPublisherConfigProps {
      * @param channelImageUrlTemplate The channel image URL template to set.
      */
     @SuppressWarnings("unused")
-    public void setChannelImageUrlTemplate(String channelImageUrlTemplate) {
+    public final void setChannelImageUrlTemplate(String channelImageUrlTemplate) {
         this.channelImageUrlTemplate = channelImageUrlTemplate;
     }
 
@@ -127,7 +131,7 @@ public class RSSPublisherConfigProps {
      *
      * @return The RSS feed type.
      */
-    public String getRssFeedType() {
+    public final String getRssFeedType() {
         return rssFeedType;
     }
 
@@ -137,7 +141,7 @@ public class RSSPublisherConfigProps {
      * @param rssFeedType The RSS feed type to set.
      */
     @SuppressWarnings("unused")
-    public void setRssFeedType(String rssFeedType) {
+    public final void setRssFeedType(String rssFeedType) {
         this.rssFeedType = rssFeedType;
     }
 
@@ -146,7 +150,7 @@ public class RSSPublisherConfigProps {
      *
      * @return The ATOM feed type.
      */
-    public String getAtomFeedType() {
+    public final String getAtomFeedType() {
         return atomFeedType;
     }
 
@@ -156,7 +160,7 @@ public class RSSPublisherConfigProps {
      * @param atomFeedType The ATOM feed type to set.
      */
     @SuppressWarnings("unused")
-    public void setAtomFeedType(String atomFeedType) {
+    public final void setAtomFeedType(String atomFeedType) {
         this.atomFeedType = atomFeedType;
     }
 
@@ -165,7 +169,7 @@ public class RSSPublisherConfigProps {
      *
      * @return The channel TTL value.
      */
-    public int getChannelTtl() {
+    public final int getChannelTtl() {
         return channelTtl;
     }
 
@@ -175,7 +179,81 @@ public class RSSPublisherConfigProps {
      * @param channelTtl The channel TTL value to set.
      */
     @SuppressWarnings("unused")
-    public void setChannelTtl(int channelTtl) {
+    public final void setChannelTtl(int channelTtl) {
         this.channelTtl = channelTtl;
+    }
+
+    /**
+     * Gets the configured default value for the channel generator.
+     *
+     * @return The default channel generator value.
+     */
+    public final String getDefaultGeneratorValue() {
+        return defaultGeneratorValue;
+    }
+
+    /**
+     * Sets the default value for the channel generator.
+     *
+     * @param defaultGeneratorValue The default channel generator value to set.
+     */
+    @SuppressWarnings("unused")
+    public final void setDefaultGeneratorValue(String defaultGeneratorValue) {
+        this.defaultGeneratorValue = defaultGeneratorValue;
+    }
+
+    /**
+     * Gets the configured default URL for the channel generator.
+     *
+     * @return The default channel generator URL.
+     */
+    public final String getDefaultGeneratorUrl() {
+        return defaultGeneratorUrl;
+    }
+
+    /**
+     * Sets the default URL for the channel generator.
+     *
+     * @param defaultGeneratorUrl The default channel generator URL to set.
+     */
+    @SuppressWarnings("unused")
+    public final void setDefaultGeneratorUrl(String defaultGeneratorUrl) {
+        this.defaultGeneratorUrl = defaultGeneratorUrl;
+    }
+
+    /**
+     * Gets the configured default version for the channel generator.
+     *
+     * @return The default channel generator version.
+     */
+    public final String getDefaultGeneratorVersion() {
+        return defaultGeneratorVersion;
+    }
+
+    /**
+     * Sets the default version for the channel generator.
+     *
+     * @param defaultGeneratorVersion The default channel generator version to set.
+     */
+    @SuppressWarnings("unused")
+    public final void setDefaultGeneratorVersion(String defaultGeneratorVersion) {
+        this.defaultGeneratorVersion = defaultGeneratorVersion;
+    }
+
+    @Override
+    public final String toString() {
+        return "RSSPublisherConfigProps{" +
+                "channelImageHeight=" + channelImageHeight +
+                ", channelImageWidth=" + channelImageWidth +
+                ", channelLinkTemplate='" + channelLinkTemplate + '\'' +
+                ", channelUriTemplate='" + channelUriTemplate + '\'' +
+                ", channelImageUrlTemplate='" + channelImageUrlTemplate + '\'' +
+                ", rssFeedType='" + rssFeedType + '\'' +
+                ", atomFeedType='" + atomFeedType + '\'' +
+                ", channelTtl=" + channelTtl +
+                ", defaultGeneratorValue='" + defaultGeneratorValue + '\'' +
+                ", defaultGeneratorUrl='" + defaultGeneratorUrl + '\'' +
+                ", defaultGeneratorVersion='" + defaultGeneratorVersion + '\'' +
+                '}';
     }
 }

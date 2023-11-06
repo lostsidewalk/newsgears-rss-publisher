@@ -3,16 +3,20 @@ package com.lostsidewalk.buffy.rss;
 import com.lostsidewalk.buffy.publisher.Publisher;
 import com.lostsidewalk.buffy.model.RenderedRSSFeed;
 import com.rometools.rome.feed.rss.*;
+import lombok.extern.slf4j.Slf4j;
 import org.junit.jupiter.api.Test;
 import org.mockito.ArgumentCaptor;
 
 import java.util.List;
+import java.util.Map;
 
 import static java.util.Collections.singletonList;
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.Mockito.doNothing;
 
+
+@Slf4j
 class RSSPublisherTest extends BaseRSSPublisherTest {
 
     @Test
@@ -20,14 +24,14 @@ class RSSPublisherTest extends BaseRSSPublisherTest {
         // setup mocks
         ArgumentCaptor<RenderedRSSFeed> rssChannelValueCapture = ArgumentCaptor.forClass(RenderedRSSFeed.class);
         try {
-            doNothing().when(this.renderedFeedDao).putRSSFeedAtTransportIdent(anyString(), rssChannelValueCapture.capture());
+            doNothing().when(renderedFeedDao).putRSSFeedAtTransportIdent(anyString(), rssChannelValueCapture.capture());
         } catch (Exception e) {
             fail(e.getMessage());
         }
         // invoke test
-        Publisher.PubResult pubResult = rssPublisher.publishFeed(TEST_QUEUE_DEFINITION, singletonList(TEST_STAGING_POST), TEST_PUBLISH_TIMESTAMP);
+        Map<String, Publisher.PubResult> pubResults = rssPublisher.publishFeed(TEST_QUEUE_DEFINITION, singletonList(TEST_STAGING_POST), TEST_PUBLISH_TIMESTAMP);
         // evaluate the result
-        assertNotNull(pubResult);
+        assertNotNull(pubResults);
         RenderedRSSFeed renderedRSSFeed = rssChannelValueCapture.getValue();
         assertNotNull(renderedRSSFeed);
         assertEquals("testTransportIdent", renderedRSSFeed.getTransportIdent());
@@ -63,7 +67,7 @@ class RSSPublisherTest extends BaseRSSPublisherTest {
         // categories
         List<Category> categories = channel.getCategories();
         assertNotNull(categories);
-        assertEquals(categories.size(), 1);
+        assertEquals(1, categories.size());
         Category category = categories.get(0);
         // (category domain)
         assertEquals("testCategoryDomain", category.getDomain());
@@ -79,7 +83,7 @@ class RSSPublisherTest extends BaseRSSPublisherTest {
         // (image link)
         assertEquals("https://localhost/rss/testTransportIdent", image.getLink());
         // (image url)
-        assertEquals("https://localhost/rss/testTransportIdent", image.getUrl());
+        assertEquals("https://localhost/img/C9E13DDA9F5D9DD19DE431CB4758CC34", image.getUrl());
     }
 
     private static void validateChannelOptionalProperties(Channel channel) {
@@ -132,7 +136,7 @@ class RSSPublisherTest extends BaseRSSPublisherTest {
         assertEquals("testEnclosureUrl", enclosure.getUrl());
         Guid guid = item.getGuid();
         assertNotNull(guid);
-        assertEquals("testPostUrl", guid.getValue());
+        assertEquals("testPostHash", guid.getValue());
         assertEquals(TEST_PUBLISH_TIMESTAMP, item.getPubDate());
         assertNull(item.getSource());
     }
