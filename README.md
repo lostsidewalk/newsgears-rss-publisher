@@ -13,11 +13,8 @@
     <img src="images/logo.png" alt="Logo" width="144" height="144" style="box-shadow: 2px 2px 2px rgba(64,64,64,0.7)">
   </a>
 
-<h3 align="center">FeedGears RSS</h3>
+<h3 align="center">NewsGears RSS</h3>
  <p align="center">
-    FeedGears RSS is a web-based RSS aggregator/reader platform.
-    <br />
-    <br />
     <a href="https://github.com/lostsidewalk/newsgears-rss-publisher/issues">Report Bug</a>
     ·
     <a href="https://github.com/lostsidewalk/newsgears-rss-publisher/issues">Request Feature</a>
@@ -45,48 +42,18 @@
 </details>
 
 
-<!-- ABOUT THE PROJECT -->
-## About The Project
+## What Is This
 
-https://www.feedgears.com
+This repository contains the RSS/ATOM publisher.  The RSS/ATOM publisher is a back-end component that is invoked to produce RSS/ATOM artifacts from staging post entities.
 
-FeedGears is a modern, free/libre, web-based RSS reader and aggregator platform. I built FeedGears with the goal of maintaining and advancing public interest in RSS, a unique and fun way of exploring the Internet. The world deserves free, secure, private, and inclusive access to RSS. This project is funded entirely by users, such as myself, and donors like you! FeedGears will always be free as in, and free as in freedom.
-
-What is RSS?
-
-RSS (RDF Site Summary or Really Simple Syndication) is a web feed that allows users and applications to access updates to websites in a standardized, computer-readable format. Subscribing to RSS feeds can allow a user to keep track of many different websites in a single news aggregator, which constantly monitors sites for new content, removing the need for the user to manually check them.
-
-FeedGears is an RSS aggregator
-
-The cloud-hosted version, www.feedgears.com, tracks thousands of feeds daily on behalf of our users. We import tens of thousands or articles, and organize and present them to people around the world to read, search, filter, etc. in a highly customizable and accessible way. Since FeedGears is entirely free, you can host your own instance using pre-built containers, using the instructions located here.
-
-This repository contains the RSS/ATOM publisher.  The RSS/ATOM publisher is a back-end component that is invoked to produce RSS/ATOM artifacts from staging post entities.  
-
-For more information about FeedGears, see the parent project repository at: https://www.github.com/lostsidewalk/newsgears-app.
+For more information about NewsGears, and RSS in general, see the parent project repository at: https://www.github.com/lostsidewalk/newsgears-app.
 
 <p align="right">(<a href="#readme-top">back to top</a>)</p>
 
 
 ### Built With
 
-newsgears-rss-publisher is a Java 19 library package, built with the following dependencies:
-
-Implementation Dependencies:
-<ul>
-    <li>com.lostsidewalk.newsgears:newsgears-data</li>
-    <li>org.slf4j:slf4j-api:2.0.5</li>
-    <li>org.json:json:20230227</li>
-    <li>org.springframework.boot:spring-boot-starter:3.0.4</li>
-    <li>org.apache.commons:commons-collections4:4.4</li>
-    <li>org.apache.commons:commons-lang3:3.12.0</li>
-    <li>commons-io:commons-io:2.11.0</li>
-    <li>commons-validator:commons-validator:1.7</li>
-    <li>javax.xml.bind:jaxb-api:2.4.0-b180830.0359</li>
-    <li>com.google.code.gson:gson:2.10.1</li>
-    <li>com.rometools:rome:2.1.0</li>
-    <li>com.rometools:rome-opml:2.1.0</li>
-    <li>com.rometools:rome-modules:2.1.0</li>
-</ul>
+newsgears-rss-publisher is a Java 19 library package.
 
 <p align="right">(<a href="#readme-top">back to top</a>)</p>
 
@@ -96,7 +63,7 @@ Implementation Dependencies:
 
 ```
 dependencies {
-    api 'com.lostsidewalk.newsgears:newsgears-rss-publisher:0.4'
+    api 'com.lostsidewalk.newsgears:newsgears-rss-publisher'
 }
 ```
 
